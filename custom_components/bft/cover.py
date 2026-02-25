@@ -589,10 +589,11 @@ class BftCover(CoverEntity):
                         continue
                     else:
                         _LOGGER.warning(
-                            "BFT server error on diagnosis for %s (HTTP %d) after %d attempts, will use last known state",
+                            "BFT server error on diagnosis for %s (HTTP %d) after %d attempts, returning empty status",
                             self._name, ex.response.status_code, self._retry_count
                         )
-                        raise
+                        # Return empty dict instead of raising - let update() handle it gracefully
+                        return {}
                 else:
                     # For critical commands (open/close/stop) or client errors, don't retry
                     _LOGGER.error("Failed to execute command %s for %s: %s", func, self._name, ex)
@@ -616,9 +617,10 @@ class BftCover(CoverEntity):
                     # After all retries, log appropriately based on command type
                     if func == "diagnosis":
                         _LOGGER.warning(
-                            "SSL error on diagnosis for %s after %d attempts, will use last known state",
+                            "SSL error on diagnosis for %s after %d attempts, returning empty status",
                             self._name, self._retry_count
                         )
+                        return {}
                     else:
                         _LOGGER.error(
                             "Failed to execute command %s for %s: SSL error after %d attempts",
@@ -643,9 +645,10 @@ class BftCover(CoverEntity):
                 else:
                     if func == "diagnosis":
                         _LOGGER.warning(
-                            "Connection error on diagnosis for %s after %d attempts, will use last known state",
+                            "Connection error on diagnosis for %s after %d attempts, returning empty status",
                             self._name, self._retry_count
                         )
+                        return {}
                     else:
                         _LOGGER.error(
                             "Failed to execute command %s for %s: Connection error after %d attempts",
@@ -669,9 +672,10 @@ class BftCover(CoverEntity):
                 else:
                     if func == "diagnosis":
                         _LOGGER.warning(
-                            "Request error on diagnosis for %s after %d attempts, will use last known state",
+                            "Request error on diagnosis for %s after %d attempts, returning empty status",
                             self._name, self._retry_count
                         )
+                        return {}
                     else:
                         _LOGGER.error(
                             "Failed to execute command %s for %s after %d attempts: %s",
