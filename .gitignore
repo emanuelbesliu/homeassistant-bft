@@ -1,0 +1,35 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignore credentials
+creds.yaml
+secrets.yaml
+*.secret
+
+# Ignore test outputs
+*.log
+test_output/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Home Assistant config
+configuration.yaml.backup
+home-assistant.log
+home-assistant_v2.db
+
+# Ignore build/dist
+build/
+dist/
+*.egg-info/
