@@ -5,6 +5,17 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-02-25
+
+### Added
+- **Unique ID support**: Entity now has a unique identifier, enabling UI-based configuration and customization
+- Unique ID is based on device UUID when available, or device name as fallback
+- Enables renaming entities, changing icons, and other UI customizations
+
+### Fixed
+- Resolved "entity does not have a unique ID" warning in Home Assistant UI
+- Entity settings can now be managed from the UI
+
 ## [1.0.1] - 2026-02-25
 
 ### Fixed

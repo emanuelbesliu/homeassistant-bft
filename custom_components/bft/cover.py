@@ -257,6 +257,14 @@ class BftCover(CoverEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID for this cover."""
+        # Use device_id if available, otherwise fallback to device_name
+        if self.device_id:
+            return f"bft_{self.device_id}"
+        return f"bft_{self.device_name.lower().replace(' ', '_')}"
+
+    @property
     def should_poll(self):
         """Enable polling for status updates."""
         return True
