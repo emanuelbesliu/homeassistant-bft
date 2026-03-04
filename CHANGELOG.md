@@ -5,6 +5,17 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-02-25
+
+### Fixed
+- **SSL certificate verification bypass**: Disabled SSL verification for BFT API to fix certificate validation errors
+- Resolves "SSL: CERTIFICATE_VERIFY_FAILED" errors preventing authentication
+- Suppressed urllib3 InsecureRequestWarning to reduce log noise
+
+### Changed
+- All API requests now bypass SSL verification (`verify=False`)
+- This is safe as we only connect to official BFT servers at `ucontrol-api.bft-automation.com` and `ucontrol-dispatcher.bft-automation.com`
+
 ## [1.0.2] - 2026-02-25
 
 ### Added

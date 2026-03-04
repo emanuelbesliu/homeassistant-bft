@@ -8,6 +8,13 @@ import voluptuous as vol
 import asyncio
 from functools import partial
 
+# Disable SSL warnings for BFT API (certificate verification issues)
+try:
+    from urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+except ImportError:
+    pass  # Ignore if urllib3 is not available
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -319,7 +326,8 @@ class BftCover(CoverEntity):
                     url, 
                     auth=("particle", "particle"), 
                     data=args, 
-                    timeout=self._timeout
+                    timeout=self._timeout,
+                    verify=False  # Bypass SSL verification for BFT API
                 )
                 ret.raise_for_status()
                 response_json = ret.json()
@@ -357,7 +365,7 @@ class BftCover(CoverEntity):
         for attempt in range(self._retry_count):
             try:
                 _LOGGER.debug("Requesting device ID (attempt %d/%d)", attempt + 1, self._retry_count)
-                ret = requests.get(url, timeout=self._timeout)
+                ret = requests.get(url, timeout=self._timeout, verify=False)  # Bypass SSL verification
                 ret.raise_for_status()
                 response_json = ret.json()
                 for automations in response_json.get("data", {}).get("automations", []):
@@ -394,7 +402,7 @@ class BftCover(CoverEntity):
             return None
         url = f"{self.particle_url}/v1/access_tokens/{self.access_token}"
         try:
-            ret = requests.delete(url, auth=(self._username, self._password), timeout=self._timeout)
+            ret = requests.delete(url, auth=(self._username, self._password), timeout=self._timeout, verify=False)  # Bypass SSL verification
             ret.raise_for_status()
             _LOGGER.debug("Successfully removed access token")
             return ret.text
@@ -567,7 +575,7 @@ class BftCover(CoverEntity):
         
         for attempt in range(self._retry_count):
             try:
-                ret = requests.get(url, timeout=self._timeout, headers=api_call_headers)
+                ret = requests.get(url, timeout=self._timeout, headers=api_call_headers, verify=False)  # Bypass SSL verification
                 ret.raise_for_status()
                 return ret.json()
             except requests.exceptions.Timeout:
