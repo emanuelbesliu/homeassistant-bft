@@ -1,8 +1,9 @@
 # BFT Gate Automation - Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![Auto Updates](https://img.shields.io/badge/updates-automated-success.svg)](AUTO_VERSIONING.md)
 
 Custom Home Assistant integration for BFT gate/cover automation systems via BFT uControl Cloud API.
 
@@ -14,6 +15,7 @@ Custom Home Assistant integration for BFT gate/cover automation systems via BFT 
 - 🛡️ Robust error handling with retry logic
 - 🌐 SSL/Connection failure resilience
 - ⚡ Async initialization (non-blocking startup)
+- 🤖 **Automated updates** - Dependencies and releases managed automatically
 
 ## Installation
 
@@ -162,6 +164,17 @@ logger:
 2. **Initial Status Delay:** First update may take 10-30 seconds after restart.
 3. **State Updates:** Polling occurs every 5 seconds minimum (throttled).
 
+## Automated Updates
+
+This integration features **fully automated dependency management and versioning**:
+
+- 🔄 **Dependency Updates:** Dependabot monitors dependencies weekly
+- 🤖 **Auto-Versioning:** New releases created automatically when dependencies are updated
+- 📢 **Update Notifications:** Users notified via HACS within hours
+- 🔒 **Security:** Security vulnerabilities fixed and released automatically
+
+See [AUTO_VERSIONING.md](AUTO_VERSIONING.md) for complete details.
+
 ## Development
 
 ### Testing Authentication
@@ -182,6 +195,13 @@ custom_components/bft/
 ├── manifest.json     # Integration metadata
 └── test_auth.py      # Authentication test script
 ```
+
+### Documentation
+
+- [AUTO_VERSIONING.md](AUTO_VERSIONING.md) - Automated versioning system
+- [DEPENDABOT.md](DEPENDABOT.md) - Dependency management
+- [UPDATE_NOTIFICATIONS.md](UPDATE_NOTIFICATIONS.md) - Update notification system
+- [CHANGELOG.md](CHANGELOG.md) - Version history
 
 ## Support
 

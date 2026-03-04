@@ -101,11 +101,11 @@ jobs:
           PR_NUMBER="${{ github.event.pull_request.number }}"
           CURRENT_DATE=$(date +%Y-%m-%d)
           
-          cat > changelog_entry.txt << 'EOF'
-          ## [${{ steps.new_version.outputs.new_version }}] - $(date +%Y-%m-%d)
+          cat > changelog_entry.txt << EOF
+          ## [${NEW_VERSION}] - ${CURRENT_DATE}
 
           ### Changed
-          - ${{ github.event.pull_request.title }} (#${{ github.event.pull_request.number }})
+          - ${PR_TITLE} (#${PR_NUMBER})
           - Dependency updates from Dependabot
 
           EOF
