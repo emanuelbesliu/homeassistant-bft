@@ -38,3 +38,9 @@ dist/
 *.zip
 RELEASE_*.md
 GITHUB_PUSH_SUMMARY.md
+
+# Ignore detailed internal documentation (keep only README, CHANGELOG, info.md)
+AUTOMATED_UPDATES_SETUP.md
+AUTO_VERSIONING*.md
+DEPENDABOT.md
+UPDATE_NOTIFICATIONS.md
