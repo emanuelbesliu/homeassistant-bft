@@ -33,3 +33,8 @@ home-assistant_v2.db
 build/
 dist/
 *.egg-info/
+
+# Ignore release artifacts (created by CI/CD)
+*.zip
+RELEASE_*.md
+GITHUB_PUSH_SUMMARY.md
