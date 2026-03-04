@@ -5,6 +5,12 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-03-04
+
+### Changed
+- Bump requests from 2.31.0 to 2.32.0 (#7)
+- Dependency updates from Dependabot
+
 ## [1.0.4] - 2026-03-04
 
 ### Changed
