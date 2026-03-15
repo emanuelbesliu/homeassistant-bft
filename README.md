@@ -3,23 +3,25 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub Release](https://img.shields.io/github/v/release/emanuelbesliu/homeassistant-bft)](https://github.com/emanuelbesliu/homeassistant-bft/releases/latest)
 [![License](https://img.shields.io/github/license/emanuelbesliu/homeassistant-bft)](LICENSE)
-[![Auto Updates](https://img.shields.io/badge/updates-automated-success.svg)](AUTO_VERSIONING.md)
 
-Custom Home Assistant integration for BFT gate/cover automation systems via BFT uControl Cloud API.
+Custom Home Assistant integration for BFT gate/cover automation systems via the BFT uControl Cloud API.
 
 ## Features
 
-- 🚪 Control BFT gates (open, close, stop)
-- 📊 Real-time status monitoring
-- 🔄 Automatic state detection (open, closed, moving, stopped)
-- 🛡️ Robust error handling with retry logic
-- 🌐 SSL/Connection failure resilience
-- ⚡ Async initialization (non-blocking startup)
-- 🤖 **Automated updates** - Dependencies and releases managed automatically
+- Control BFT gates (open, close, stop) from Home Assistant
+- UI-based setup via config flow -- no YAML editing required
+- Real-time status monitoring (open, closed, moving, stopped)
+- Cloud-resilient polling with last-known-state preservation during outages
+- Exponential backoff on cloud failures to avoid hammering a down API
+- Automatic recovery when cloud connectivity returns
+- Fast polling (5s) while the gate is moving, normal polling (30s) at rest
+- Device registry integration with proper device info
+- Re-authentication flow when credentials expire
+- Diagnostics support for troubleshooting
 
 ## Installation
 
-### HACS (Recommended - Coming Soon)
+### HACS (Recommended)
 
 1. Open HACS in Home Assistant
 2. Go to "Integrations"
@@ -39,59 +41,34 @@ Custom Home Assistant integration for BFT gate/cover automation systems via BFT 
 
 ## Configuration
 
-Add to your `configuration.yaml`:
+### Setup via UI
 
-```yaml
-cover:
-  - platform: bft
-    covers:
-      driveway_gate:                    # Unique identifier
-        device: YOUR_DEVICE_NAME        # BFT device name from app
-        username: !secret bft_username  # BFT account email
-        password: !secret bft_password  # BFT account password
-        name: Driveway Gate            # Friendly name (optional)
-        timeout: 20                    # Request timeout (optional, default: 10)
-        retry_count: 10                # Retries (optional, default: 3)
-        skip_initial_update: true      # Skip initial check (optional, default: false)
-```
+1. Go to **Settings > Devices & Services**
+2. Click **Add Integration**
+3. Search for **BFT Gate Automation**
+4. Enter your BFT uControl cloud credentials (email and password)
+5. Select the gate device to add from the discovered devices
+6. Optionally set a custom display name
 
-Add to your `secrets.yaml`:
+You can add multiple gates by adding the integration again for each device.
 
-```yaml
-bft_username: your@email.com
-bft_password: your_password
-```
+### Advanced Options
 
-### Configuration Options
+During setup you can configure:
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `device` | Yes | - | Device name as shown in BFT app |
-| `username` | Yes | - | BFT account email |
-| `password` | Yes | - | BFT account password |
-| `name` | No | BFT | Friendly name for the gate |
-| `timeout` | No | 10 | API request timeout (seconds) |
-| `retry_count` | No | 3 | Number of retry attempts |
-| `skip_initial_update` | No | false | Skip initial state fetch |
+| Option | Default | Description |
+|--------|---------|-------------|
+| Timeout | 10s | API request timeout per attempt |
+| Retry count | 3 | Number of retry attempts per API call |
 
-### Multiple Gates
+### Upgrading from v1.x (YAML configuration)
 
-```yaml
-cover:
-  - platform: bft
-    covers:
-      front_gate:
-        device: FRONT_GATE
-        username: !secret bft_username
-        password: !secret bft_password
-        name: Front Gate
-      
-      back_gate:
-        device: BACK_GATE
-        username: !secret bft_username
-        password: !secret bft_password
-        name: Back Gate
-```
+Version 2.0 replaces `configuration.yaml` setup with UI-based config flow. To upgrade:
+
+1. Remove the old `cover:` platform entry from your `configuration.yaml`
+2. Restart Home Assistant
+3. Add the integration via **Settings > Devices & Services > Add Integration**
+4. The entity ID will be preserved if you use the same name
 
 ## Usage
 
@@ -123,31 +100,65 @@ Standard Home Assistant cover services:
 - `cover.close_cover` - Close the gate
 - `cover.stop_cover` - Stop gate movement
 
+### Entity Attributes
+
+| Attribute | Description |
+|-----------|-------------|
+| `consecutive_failures` | Number of consecutive cloud polling failures |
+| `stale_data` | `true` if the displayed state is from the last successful poll (cloud currently unreachable) |
+| `device_uuid` | The BFT device UUID |
+| `first_engine_pos` / `second_engine_pos` | Engine position percentage (0-100) |
+| `first_engine_vel` / `second_engine_vel` | Engine velocity |
+
+## Cloud Resilience
+
+The BFT cloud API can be unreliable. This integration handles that with several strategies:
+
+1. **Last-known-state preservation** - During transient outages the entity stays available showing its last known state. The `stale_data` attribute indicates when data is not fresh.
+2. **Grace period** - The entity is only marked unavailable after 10 consecutive polling failures, not on the first error.
+3. **Exponential backoff** - When the cloud is down, polling interval increases (2s, 4s, 8s... up to 5 minutes) to avoid unnecessary requests.
+4. **Automatic recovery** - When the cloud comes back, normal polling resumes automatically with no reload needed.
+5. **Re-authentication** - If your credentials expire or become invalid, Home Assistant prompts you to re-authenticate via the UI.
+
 ## Troubleshooting
 
 ### Integration Not Loading
 
-1. Check logs: `Settings → System → Logs` (search for "bft")
-2. Verify file structure:
-   ```bash
-   ls -la /config/custom_components/bft/
-   # Should show: __init__.py, cover.py, manifest.json
+1. Check logs: **Settings > System > Logs** (filter for "bft")
+2. Verify the file structure:
+   ```
+   /config/custom_components/bft/
+       __init__.py
+       bft_api.py
+       config_flow.py
+       const.py
+       coordinator.py
+       cover.py
+       diagnostics.py
+       manifest.json
+       strings.json
+       translations/en.json
    ```
 3. Restart Home Assistant
 
-### Gate Not Responding
+### Setup Fails with "Cannot Connect"
 
-1. **Check credentials:** Verify in BFT mobile app
-2. **Check device name:** Must match exactly (case-sensitive)
-3. **Network issues:** Increase `timeout` to 20-30 seconds
-4. **SSL errors:** Increase `retry_count` to 5-10
+- Verify your internet connection
+- The BFT cloud API may be temporarily down -- try again later
+- Increase the timeout value during setup
+
+### Setup Fails with "Invalid Auth"
+
+- Verify your credentials work in the BFT mobile app
+- Check for typos in email/password
 
 ### Entity Shows "Unavailable"
 
-- Integration marks entity unavailable after 5 consecutive failures
-- Check logs for specific errors
-- Verify internet connection to BFT cloud API
-- Try reloading integration or restarting HA
+- This means 10 consecutive polls have failed
+- Check **Settings > System > Logs** for specific errors
+- Verify your internet connection to the BFT cloud
+- The integration will automatically recover when the cloud comes back -- no reload needed
+- Download diagnostics: **Settings > Devices & Services > BFT > (device) > Download Diagnostics**
 
 ### Enable Debug Logging
 
@@ -158,55 +169,37 @@ logger:
     custom_components.bft: debug
 ```
 
-## Known Issues
-
-1. **BFT API Reliability:** The BFT cloud API can experience SSL errors and timeouts. The integration includes robust retry logic.
-2. **Initial Status Delay:** First update may take 10-30 seconds after restart.
-3. **State Updates:** Polling occurs every 5 seconds minimum (throttled).
-
-## Automated Updates
-
-This integration features **fully automated dependency management and versioning**:
-
-- 🔄 **Dependency Updates:** Dependabot monitors dependencies weekly
-- 🤖 **Auto-Versioning:** New releases created automatically when dependencies are updated
-- 📢 **Update Notifications:** Users notified via HACS within hours
-- 🔒 **Security:** Security vulnerabilities fixed and released automatically
-
-See [AUTO_VERSIONING.md](AUTO_VERSIONING.md) for complete details.
-
 ## Development
-
-### Testing Authentication
-
-Run the included test script:
-
-```bash
-cd custom_components/bft
-python3 test_auth.py
-```
 
 ### File Structure
 
 ```
 custom_components/bft/
-├── __init__.py       # Component setup
-├── cover.py          # Main platform implementation
-├── manifest.json     # Integration metadata
-└── test_auth.py      # Authentication test script
+    __init__.py       # Integration setup (async_setup_entry / async_unload_entry)
+    bft_api.py        # Async API client (aiohttp)
+    config_flow.py    # UI-based configuration flow
+    const.py          # Shared constants
+    coordinator.py    # DataUpdateCoordinator with resilience logic
+    cover.py          # Cover entity (CoordinatorEntity)
+    diagnostics.py    # Diagnostics data export
+    manifest.json     # Integration metadata
+    strings.json      # UI strings
+    translations/
+        en.json       # English translations
+    test_auth.py      # Standalone authentication test script
 ```
 
-### Documentation
+### Testing Authentication
 
-- [AUTO_VERSIONING.md](AUTO_VERSIONING.md) - Automated versioning system
-- [DEPENDABOT.md](DEPENDABOT.md) - Dependency management
-- [UPDATE_NOTIFICATIONS.md](UPDATE_NOTIFICATIONS.md) - Update notification system
-- [CHANGELOG.md](CHANGELOG.md) - Version history
+```bash
+cd custom_components/bft
+BFT_USERNAME=your@email.com BFT_PASSWORD=yourpass BFT_DEVICE=DEVICE_NAME python3 test_auth.py
+```
 
 ## Support
 
-- 🐛 **Issues:** [GitHub Issues](https://github.com/emanuelbesliu/homeassistant-bft/issues)
-- 💬 **Discussions:** [GitHub Discussions](https://github.com/emanuelbesliu/homeassistant-bft/discussions)
+- [GitHub Issues](https://github.com/emanuelbesliu/homeassistant-bft/issues)
+- [GitHub Discussions](https://github.com/emanuelbesliu/homeassistant-bft/discussions)
 
 ## Contributing
 
@@ -230,5 +223,3 @@ Developed by Emanuel Besliu ([@emanuelbesliu](https://github.com/emanuelbesliu))
 ## Disclaimer
 
 This integration is not affiliated with, endorsed by, or supported by BFT. Use at your own risk.
-# Test dependency update
-# Test v2
