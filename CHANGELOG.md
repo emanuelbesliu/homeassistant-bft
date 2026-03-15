@@ -5,6 +5,22 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/emanuelbesliu/homeassistant-bft/compare/v1.0.7...v2.0.0) (2026-03-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove configuration.yaml setup in favor of UI-based config flow.
+
+### Features
+
+* transform to standalone integration with config flow and cloud resilience ([a6d5f6a](https://github.com/emanuelbesliu/homeassistant-bft/commit/a6d5f6ade00fd624dbf949ab096e5be76e252c67))
+
+
+### Documentation
+
+* update README and HACS info for v2.0 config flow setup ([fa71ad3](https://github.com/emanuelbesliu/homeassistant-bft/commit/fa71ad329a1668a1aaa8dc2ee51e2370a0eb7dfa))
+
 ## [1.0.5] - 2026-03-04
 
 ### Changed
