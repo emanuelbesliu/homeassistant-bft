@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "BFT Cloud Account",
+        "description": "Enter your BFT uControl cloud credentials.",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "timeout": "API timeout (seconds)",
+          "retry_count": "Retry count"
+        },
+        "data_description": {
+          "username": "The email address used for your BFT uControl account.",
+          "password": "The password for your BFT uControl account.",
+          "timeout": "Timeout in seconds for each API request (default: 10).",
+          "retry_count": "Number of retries for failed API requests (default: 3)."
+        }
+      },
+      "device": {
+        "title": "Select Device",
+        "description": "Select the BFT gate device to add.",
+        "data": {
+          "device_name": "Device",
+          "name": "Display name (optional)"
+        },
+        "data_description": {
+          "device_name": "The BFT device to control.",
+          "name": "Custom name for this gate in Home Assistant. Defaults to the device name."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate BFT",
+        "description": "Your BFT credentials are no longer valid. Please enter updated credentials.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid username or password.",
+      "cannot_connect": "Unable to connect to BFT cloud service.",
+      "no_devices": "No BFT devices found in your account.",
+      "device_not_found": "Selected device was not found.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This device is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  }
+}
