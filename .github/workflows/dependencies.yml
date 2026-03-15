@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -33,37 +33,64 @@ jobs:
 
       - name: Verify manifest.json requirements match
         run: |
-          # Extract requirements from manifest.json
-          MANIFEST_REQS=$(python -c "import json; print(' '.join(json.load(open('custom_components/bft/manifest.json'))['requirements']))")
-          
-          echo "Manifest requirements: $MANIFEST_REQS"
-          echo "requirements.txt:"
-          cat requirements.txt | grep -v '^#' | grep -v '^$'
-          
-          # Check if requests is in requirements.txt
-          if ! grep -q "requests" requirements.txt; then
-            echo "❌ requests not found in requirements.txt"
-            exit 1
-          fi
-          
-          echo "✓ Dependencies validation passed"
+          python3 << 'EOF'
+          import json, re, sys
 
-      - name: Test import
+          manifest = json.load(open("custom_components/bft/manifest.json"))
+          manifest_reqs = manifest.get("requirements", [])
+
+          with open("requirements.txt") as f:
+              req_txt = f.read()
+
+          print(f"Manifest requirements: {manifest_reqs}")
+          print(f"requirements.txt (non-comment lines):")
+          for line in req_txt.splitlines():
+              stripped = line.strip()
+              if stripped and not stripped.startswith("#"):
+                  print(f"  {stripped}")
+
+          failed = False
+          for req in manifest_reqs:
+              # Extract package name (before any version specifier)
+              pkg_name = re.split(r"[><=!~]", req)[0].strip()
+              if pkg_name.lower() not in req_txt.lower():
+                  print(f"FAIL: {pkg_name} (from manifest.json) not found in requirements.txt")
+                  failed = True
+              else:
+                  print(f"OK: {pkg_name} found in requirements.txt")
+
+          if failed:
+              sys.exit(1)
+
+          print("Dependencies validation passed")
+          EOF
+
+      - name: Test imports
         run: |
-          python -c "import requests; print(f'requests version: {requests.__version__}')"
-          echo "✓ All dependencies can be imported"
+          python3 << 'EOF'
+          import json
+
+          manifest = json.load(open("custom_components/bft/manifest.json"))
+          for req in manifest.get("requirements", []):
+              import re
+              pkg_name = re.split(r"[><=!~]", req)[0].strip()
+              __import__(pkg_name)
+              print(f"OK: {pkg_name} imports successfully")
+
+          print("All dependencies can be imported")
+          EOF
 
       - name: Check for security vulnerabilities
         run: |
           pip install safety
-          safety check --file requirements.txt --json || echo "⚠️ Security check completed"
+          safety check --file requirements.txt --json || echo "Security check completed (warnings above may be informational)"
         continue-on-error: true
 
       - name: Create validation summary
         run: |
           echo "# Dependencies Validation" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ All dependencies validated successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "All dependencies validated successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Installed Versions" >> $GITHUB_STEP_SUMMARY
-          pip list | grep -E "requests|urllib3" >> $GITHUB_STEP_SUMMARY || true
+          pip list | grep -iE "aiohttp|aiosignal|frozenlist|multidict|yarl" >> $GITHUB_STEP_SUMMARY || true
