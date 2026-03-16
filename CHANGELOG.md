@@ -5,6 +5,13 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.0.1...v2.1.0) (2026-03-16)
+
+
+### Features
+
+* support multiple gates per BFT account with auto-discovery ([5c2f188](https://github.com/emanuelbesliu/homeassistant-bft/commit/5c2f1884dabab73d123482f985e989186e799eab))
+
 ## [2.0.1](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.0.0...v2.0.1) (2026-03-15)
 
 
