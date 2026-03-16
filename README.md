@@ -220,6 +220,12 @@ See [LICENSE](LICENSE) for details.
 
 Developed by Emanuel Besliu ([@emanuelbesliu](https://github.com/emanuelbesliu))
 
+## ☕ Support the Developer
+
+If you find this project useful, consider buying me a coffee!
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/emanuelbesliu)
+
 ## Disclaimer
 
 This integration is not affiliated with, endorsed by, or supported by BFT. Use at your own risk.
