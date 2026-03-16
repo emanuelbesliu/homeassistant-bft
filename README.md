@@ -3,6 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
 [![GitHub Release](https://img.shields.io/github/v/release/emanuelbesliu/homeassistant-bft)](https://github.com/emanuelbesliu/homeassistant-bft/releases/latest)
 [![License](https://img.shields.io/github/license/emanuelbesliu/homeassistant-bft)](LICENSE)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/emanuelbesliu)
 
 Custom Home Assistant integration for BFT gate/cover automation systems via the BFT uControl Cloud API.
 
