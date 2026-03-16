@@ -36,6 +36,47 @@ class BftRuntimeData:
 BftConfigEntry = ConfigEntry[BftRuntimeData]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry from an older version.
+
+    v1 -> v2: Entry represented a single device (had device_name, device_uuid,
+    unique_id = "bft_{device_uuid}").  In v2, an entry represents the entire
+    BFT account (unique_id = username, no device-specific keys).
+    """
+    if entry.version == 1:
+        _LOGGER.info(
+            "Migrating BFT config entry '%s' from version %s to version 2",
+            entry.title,
+            entry.version,
+        )
+
+        username = entry.data.get(CONF_USERNAME, "")
+
+        # Build new data dict without device-specific keys
+        new_data = {
+            CONF_USERNAME: username,
+            CONF_PASSWORD: entry.data[CONF_PASSWORD],
+            CONF_TIMEOUT: entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            CONF_RETRY_COUNT: entry.data.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
+        }
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            title=f"BFT ({username})",
+            unique_id=username.lower(),
+            version=2,
+        )
+
+        _LOGGER.info(
+            "Successfully migrated BFT config entry to version 2 "
+            "(account: %s)",
+            username,
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: BftConfigEntry) -> bool:
     """Set up BFT from a config entry.
 
