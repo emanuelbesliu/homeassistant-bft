@@ -11,7 +11,6 @@ OAUTH_CLIENT_ID = "particle"
 OAUTH_CLIENT_SECRET = "particle"
 
 # Configuration keys
-CONF_DEVICE_NAME = "device_name"
 CONF_TIMEOUT = "timeout"
 CONF_RETRY_COUNT = "retry_count"
 

@@ -9,6 +9,7 @@ Custom Home Assistant integration for BFT gate/cover automation systems via the 
 
 ## Features
 
+- **Multi-gate support** -- automatically discovers and adds all gates in your BFT account
 - Control BFT gates (open, close, stop) from Home Assistant
 - UI-based setup via config flow -- no YAML editing required
 - Real-time status monitoring (open, closed, moving, stopped)
@@ -16,7 +17,7 @@ Custom Home Assistant integration for BFT gate/cover automation systems via the 
 - Exponential backoff on cloud failures to avoid hammering a down API
 - Automatic recovery when cloud connectivity returns
 - Fast polling (5s) while the gate is moving, normal polling (30s) at rest
-- Device registry integration with proper device info
+- Device registry integration with proper device info per gate
 - Re-authentication flow when credentials expire
 - Diagnostics support for troubleshooting
 
@@ -48,10 +49,8 @@ Custom Home Assistant integration for BFT gate/cover automation systems via the 
 2. Click **Add Integration**
 3. Search for **BFT Gate Automation**
 4. Enter your BFT uControl cloud credentials (email and password)
-5. Select the gate device to add from the discovered devices
-6. Optionally set a custom display name
 
-You can add multiple gates by adding the integration again for each device.
+All gates in your BFT account are automatically discovered and added as separate cover entities. No manual device selection is needed.
 
 ### Advanced Options
 
@@ -70,6 +69,14 @@ Version 2.0 replaces `configuration.yaml` setup with UI-based config flow. To up
 2. Restart Home Assistant
 3. Add the integration via **Settings > Devices & Services > Add Integration**
 4. The entity ID will be preserved if you use the same name
+
+### Upgrading from v2.0.x (single-device per entry)
+
+Version 2.1 changes the config entry to represent an entire BFT account instead of a single device. All gates in the account are now auto-discovered. To upgrade:
+
+1. Remove the existing BFT integration entries from **Settings > Devices & Services**
+2. Restart Home Assistant
+3. Re-add the integration -- all gates will be discovered automatically
 
 ## Usage
 

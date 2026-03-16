@@ -1,4 +1,7 @@
-"""Cover platform for BFT Gate Automation."""
+"""Cover platform for BFT Gate Automation.
+
+Creates one cover entity per BFT gate discovered in the account.
+"""
 
 from __future__ import annotations
 
@@ -27,9 +30,21 @@ async def async_setup_entry(
     entry: BftConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up BFT cover entities from a config entry."""
-    coordinator: BftCoordinator = entry.runtime_data
-    async_add_entities([BftGateCover(coordinator, entry)])
+    """Set up BFT cover entities from a config entry.
+
+    Creates one BftGateCover entity for each gate discovered in the account.
+    """
+    runtime_data = entry.runtime_data
+    entities = [
+        BftGateCover(coordinator, entry)
+        for coordinator in runtime_data.coordinators.values()
+    ]
+    _LOGGER.info(
+        "Adding %d BFT gate cover entities for account entry %s",
+        len(entities),
+        entry.title,
+    )
+    async_add_entities(entities)
 
 
 class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
@@ -56,7 +71,7 @@ class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_uuid)},
-            name=entry.title,
+            name=coordinator.device_name,
             manufacturer="BFT",
             model="uControl Gate",
             configuration_url="https://ucontrol.bft-automation.com",
@@ -124,7 +139,7 @@ class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the gate."""
         if self._status and self._status.state == "open":
-            _LOGGER.debug("Gate already open, ignoring open command")
+            _LOGGER.debug("Gate %s already open, ignoring open command", self.coordinator.device_name)
             return
 
         await self.coordinator.client.open_gate(self.coordinator.device_uuid)
@@ -134,7 +149,7 @@ class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the gate."""
         if self._status and self._status.state == "closed":
-            _LOGGER.debug("Gate already closed, ignoring close command")
+            _LOGGER.debug("Gate %s already closed, ignoring close command", self.coordinator.device_name)
             return
 
         await self.coordinator.client.close_gate(self.coordinator.device_uuid)

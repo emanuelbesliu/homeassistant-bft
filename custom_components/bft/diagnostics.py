@@ -17,11 +17,11 @@ async def async_get_config_entry_diagnostics(
     entry: BftConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
 
-    diag: dict[str, Any] = {
-        "config_entry": async_redact_data(dict(entry.data), TO_REDACT),
-        "coordinator": {
+    devices_diag: list[dict[str, Any]] = []
+    for device_uuid, coordinator in runtime_data.coordinators.items():
+        device_info: dict[str, Any] = {
             "device_name": coordinator.device_name,
             "device_uuid": "**REDACTED**",
             "consecutive_failures": coordinator.consecutive_failures,
@@ -32,18 +32,23 @@ async def async_get_config_entry_diagnostics(
                 else None
             ),
             "last_update_success": coordinator.last_update_success,
-        },
-    }
-
-    if coordinator.data is not None:
-        diag["gate_status"] = {
-            "state": coordinator.data.state,
-            "stale": coordinator.data.stale,
-            "first_engine_pos": coordinator.data.first_engine_pos,
-            "second_engine_pos": coordinator.data.second_engine_pos,
-            "first_engine_vel": coordinator.data.first_engine_vel,
-            "second_engine_vel": coordinator.data.second_engine_vel,
-            "raw_response": coordinator.data.raw,
         }
 
-    return diag
+        if coordinator.data is not None:
+            device_info["gate_status"] = {
+                "state": coordinator.data.state,
+                "stale": coordinator.data.stale,
+                "first_engine_pos": coordinator.data.first_engine_pos,
+                "second_engine_pos": coordinator.data.second_engine_pos,
+                "first_engine_vel": coordinator.data.first_engine_vel,
+                "second_engine_vel": coordinator.data.second_engine_vel,
+                "raw_response": coordinator.data.raw,
+            }
+
+        devices_diag.append(device_info)
+
+    return {
+        "config_entry": async_redact_data(dict(entry.data), TO_REDACT),
+        "device_count": len(runtime_data.devices),
+        "devices": devices_diag,
+    }
