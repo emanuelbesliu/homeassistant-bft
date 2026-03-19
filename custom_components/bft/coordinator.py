@@ -225,12 +225,17 @@ class BftCoordinator(DataUpdateCoordinator[BftGateStatus]):
         self._apply_backoff()
 
         if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-            _LOGGER.warning(
-                "Device %s: %d consecutive failures -- marking unavailable. "
-                "Will keep retrying with backoff.",
-                self.device_name,
-                self._consecutive_failures,
-            )
+            # Only log on the threshold crossing, then every 10th failure
+            if (
+                self._consecutive_failures == MAX_CONSECUTIVE_FAILURES
+                or self._consecutive_failures % 10 == 0
+            ):
+                _LOGGER.warning(
+                    "Device %s: %d consecutive failures -- marking unavailable. "
+                    "Will keep retrying with backoff.",
+                    self.device_name,
+                    self._consecutive_failures,
+                )
             raise UpdateFailed(
                 f"BFT cloud unreachable for {self.device_name} "
                 f"after {self._consecutive_failures} attempts: {err}"

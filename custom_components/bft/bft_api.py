@@ -35,16 +35,10 @@ class BftDeviceNotFoundError(BftApiError):
     """Device not found in BFT cloud account."""
 
 
-def _create_ssl_context() -> ssl.SSLContext:
-    """Create an SSL context that skips certificate verification.
-
-    The BFT uControl API has persistent certificate issues that require
-    bypassing SSL verification.
-    """
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    return ctx
+# ssl=False disables certificate verification at the per-request level.
+# This avoids the blocking ssl.create_default_context() call that was
+# previously detected by Home Assistant's event loop protection.
+_SSL_DISABLED: bool | ssl.SSLContext = False
 
 
 class BftDevice:
@@ -78,7 +72,7 @@ class BftApiClient:
         self._retry_count = retry_count
         self._session = session
         self._access_token: str | None = None
-        self._ssl_context = _create_ssl_context()
+        self._ssl_context = _SSL_DISABLED
         self._owns_session = False
 
     @property
@@ -266,6 +260,7 @@ class BftApiClient:
         session = await self._get_session()
         is_diagnosis = command == "diagnosis"
 
+        reauthenticated = False
         last_error: Exception | None = None
         for attempt in range(self._retry_count):
             try:
@@ -275,6 +270,31 @@ class BftApiClient:
                     timeout=self._timeout,
                     ssl=self._ssl_context,
                 ) as resp:
+                    if resp.status in (401, 403):
+                        if not reauthenticated:
+                            _LOGGER.debug(
+                                "HTTP %d on %s, re-authenticating...",
+                                resp.status,
+                                command,
+                            )
+                            try:
+                                await self.authenticate()
+                            except BftAuthError:
+                                raise
+                            except BftConnectionError:
+                                pass  # will retry with old token
+                            reauthenticated = True
+                            # Update headers with the (possibly new) token
+                            headers = {
+                                "Authorization": f"Bearer {self._access_token}"
+                            }
+                            continue
+                        # Already re-authenticated once and still getting 401/403
+                        raise BftAuthError(
+                            f"Authentication failed for {command} "
+                            f"after re-authentication (HTTP {resp.status})"
+                        )
+
                     if resp.status >= 500 and is_diagnosis:
                         if attempt < self._retry_count - 1:
                             _LOGGER.debug(
@@ -297,6 +317,8 @@ class BftApiClient:
                     resp.raise_for_status()
                     return await resp.json()
 
+            except (BftAuthError,):
+                raise
             except asyncio.TimeoutError:
                 last_error = BftConnectionError(
                     f"Timeout on {command} "
