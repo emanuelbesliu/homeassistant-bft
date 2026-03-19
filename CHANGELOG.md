@@ -5,6 +5,13 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.1...v2.1.2) (2026-03-19)
+
+
+### Bug Fixes
+
+* remove blocking SSL call, add 401 re-auth on diagnosis, reduce log noise ([746d619](https://github.com/emanuelbesliu/homeassistant-bft/commit/746d6193b9b9c4223d8170ba2b8eb0fe76d9e386))
+
 ## [2.1.1](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.0...v2.1.1) (2026-03-16)
 
 
