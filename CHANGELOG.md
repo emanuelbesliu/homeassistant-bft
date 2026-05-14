@@ -5,6 +5,13 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.3](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.2...v2.1.3) (2026-05-14)
+
+
+### Bug Fixes
+
+* address HACS review feedback ([#18](https://github.com/emanuelbesliu/homeassistant-bft/issues/18)) ([8941d06](https://github.com/emanuelbesliu/homeassistant-bft/commit/8941d06ec7ae746a79621794d32666f05a5144c1))
+
 ## [2.1.2](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.1...v2.1.2) (2026-03-19)
 
 
