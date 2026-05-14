@@ -67,7 +67,7 @@ class BftConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass, verify_ssl=False)
+            session = async_get_clientsession(self.hass)
             client = BftApiClient(
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
@@ -138,7 +138,7 @@ class BftConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass, verify_ssl=False)
+            session = async_get_clientsession(self.hass)
             client = BftApiClient(
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],

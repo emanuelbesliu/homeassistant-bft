@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BftConfigEntry) -> bool:
     Authenticates once with the BFT cloud, discovers all gates in the
     account, and creates a coordinator for each gate.
     """
-    session = async_get_clientsession(hass, verify_ssl=False)
+    session = async_get_clientsession(hass)
 
     client = BftApiClient(
         username=entry.data[CONF_USERNAME],
