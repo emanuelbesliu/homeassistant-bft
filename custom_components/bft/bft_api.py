@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import ssl
 from typing import Any
 
 import aiohttp
@@ -33,12 +32,6 @@ class BftConnectionError(BftApiError):
 
 class BftDeviceNotFoundError(BftApiError):
     """Device not found in BFT cloud account."""
-
-
-# ssl=False disables certificate verification at the per-request level.
-# This avoids the blocking ssl.create_default_context() call that was
-# previously detected by Home Assistant's event loop protection.
-_SSL_DISABLED: bool | ssl.SSLContext = False
 
 
 class BftDevice:
@@ -72,20 +65,11 @@ class BftApiClient:
         self._retry_count = retry_count
         self._session = session
         self._access_token: str | None = None
-        self._ssl_context = _SSL_DISABLED
-        self._owns_session = False
 
     @property
     def access_token(self) -> str | None:
         """Return the current access token."""
         return self._access_token
-
-    async def _get_session(self) -> aiohttp.ClientSession:
-        """Get or create the aiohttp session."""
-        if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
-            self._owns_session = True
-        return self._session
 
     async def close(self) -> None:
         """Close the API client and clean up resources."""
@@ -94,8 +78,6 @@ class BftApiClient:
                 await self.remove_token()
             except BftApiError:
                 _LOGGER.debug("Error removing token during cleanup")
-        if self._owns_session and self._session and not self._session.closed:
-            await self._session.close()
 
     async def authenticate(self) -> str:
         """Authenticate with BFT cloud and return access token.
@@ -111,7 +93,6 @@ class BftApiClient:
             "password": self._password,
         }
         auth = aiohttp.BasicAuth(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET)
-        session = await self._get_session()
 
         last_error: Exception | None = None
         for attempt in range(self._retry_count):
@@ -121,12 +102,11 @@ class BftApiClient:
                     attempt + 1,
                     self._retry_count,
                 )
-                async with session.post(
+                async with self._session.post(
                     url,
                     data=data,
                     auth=auth,
                     timeout=self._timeout,
-                    ssl=self._ssl_context,
                 ) as resp:
                     if resp.status == 401:
                         raise BftAuthError("Invalid username or password")
@@ -176,13 +156,12 @@ class BftApiClient:
             raise BftApiError("Not authenticated. Call authenticate() first.")
 
         url = f"{PARTICLE_URL}/api/v1/users/?access_token={self._access_token}"
-        session = await self._get_session()
 
         last_error: Exception | None = None
         for attempt in range(self._retry_count):
             try:
-                async with session.get(
-                    url, timeout=self._timeout, ssl=self._ssl_context
+                async with self._session.get(
+                    url, timeout=self._timeout
                 ) as resp:
                     resp.raise_for_status()
                     result = await resp.json()
@@ -257,18 +236,16 @@ class BftApiClient:
 
         url = f"{DISPATCHER_API_URL}/{device_uuid}/execute/{command}"
         headers = {"Authorization": f"Bearer {self._access_token}"}
-        session = await self._get_session()
         is_diagnosis = command == "diagnosis"
 
         reauthenticated = False
         last_error: Exception | None = None
         for attempt in range(self._retry_count):
             try:
-                async with session.get(
+                async with self._session.get(
                     url,
                     headers=headers,
                     timeout=self._timeout,
-                    ssl=self._ssl_context,
                 ) as resp:
                     if resp.status in (401, 403):
                         if not reauthenticated:
@@ -370,14 +347,12 @@ class BftApiClient:
 
         url = f"{PARTICLE_URL}/v1/access_tokens/{self._access_token}"
         auth = aiohttp.BasicAuth(self._username, self._password)
-        session = await self._get_session()
 
         try:
-            async with session.delete(
+            async with self._session.delete(
                 url,
                 auth=auth,
                 timeout=self._timeout,
-                ssl=self._ssl_context,
             ) as resp:
                 resp.raise_for_status()
                 _LOGGER.debug("Successfully removed access token")
