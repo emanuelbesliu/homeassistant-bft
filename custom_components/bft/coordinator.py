@@ -25,6 +25,7 @@ from .bft_api import (
     BftApiClient,
     BftAuthError,
     BftConnectionError,
+    BftDeviceOfflineError,
     get_gate_state,
 )
 from .const import (
@@ -177,6 +178,20 @@ class BftCoordinator(DataUpdateCoordinator[BftGateStatus]):
             raise ConfigEntryAuthFailed(
                 "BFT authentication failed. Please re-authenticate."
             ) from err
+        except BftDeviceOfflineError as err:
+            # The gate controller is not connected to the BFT cloud
+            # ("Socket not found"). This is a normal condition when the
+            # device is powered down or has lost internet. Carry forward
+            # the last-known state and back off; the entity only becomes
+            # unavailable after MAX_CONSECUTIVE_FAILURES. Log once (at the
+            # first failure) instead of on every poll to avoid log spam.
+            if self._consecutive_failures == 0:
+                _LOGGER.info(
+                    "Device %s is offline (not connected to BFT cloud). "
+                    "Serving last known state and retrying with backoff.",
+                    self.device_name,
+                )
+            return self._handle_transient_failure(err)
         except BftConnectionError as err:
             return self._handle_transient_failure(err)
 
@@ -201,8 +216,10 @@ class BftCoordinator(DataUpdateCoordinator[BftGateStatus]):
             return status
 
         # Got a 200 response but status couldn't be parsed (empty diagnosis).
-        # Treat it like a transient failure.
-        _LOGGER.warning(
+        # Treat it like a transient failure. Logged at debug level because
+        # _handle_transient_failure already warns once the failure threshold
+        # is crossed -- avoids a warning on every poll.
+        _LOGGER.debug(
             "Device %s: unparseable diagnosis response: %s",
             self.device_name,
             raw_status,

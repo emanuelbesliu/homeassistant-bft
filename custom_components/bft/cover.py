@@ -14,11 +14,13 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BftConfigEntry
+from .bft_api import BftApiError, BftDeviceOfflineError
 from .const import DOMAIN
 from .coordinator import BftCoordinator, BftGateStatus
 
@@ -142,7 +144,7 @@ class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
             _LOGGER.debug("Gate %s already open, ignoring open command", self.coordinator.device_name)
             return
 
-        await self.coordinator.client.open_gate(self.coordinator.device_uuid)
+        await self._send_command(self.coordinator.client.open_gate, "open")
         self.coordinator.set_fast_poll(True)
         await self.coordinator.async_request_refresh()
 
@@ -152,11 +154,26 @@ class BftGateCover(CoordinatorEntity[BftCoordinator], CoverEntity):
             _LOGGER.debug("Gate %s already closed, ignoring close command", self.coordinator.device_name)
             return
 
-        await self.coordinator.client.close_gate(self.coordinator.device_uuid)
+        await self._send_command(self.coordinator.client.close_gate, "close")
         self.coordinator.set_fast_poll(True)
         await self.coordinator.async_request_refresh()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the gate."""
-        await self.coordinator.client.stop_gate(self.coordinator.device_uuid)
+        await self._send_command(self.coordinator.client.stop_gate, "stop")
         await self.coordinator.async_request_refresh()
+
+    async def _send_command(self, command, action: str) -> None:
+        """Send a gate command, translating API errors into user-facing errors."""
+        try:
+            await command(self.coordinator.device_uuid)
+        except BftDeviceOfflineError as err:
+            raise HomeAssistantError(
+                f"Cannot {action} gate '{self.coordinator.device_name}': "
+                "the device is offline (not connected to the BFT cloud)."
+            ) from err
+        except BftApiError as err:
+            raise HomeAssistantError(
+                f"Failed to {action} gate "
+                f"'{self.coordinator.device_name}': {err}"
+            ) from err
