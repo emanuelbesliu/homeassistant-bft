@@ -31,6 +31,18 @@ class BftConnectionError(BftApiError):
     """Connection to BFT cloud failed."""
 
 
+class BftDeviceOfflineError(BftConnectionError):
+    """The device is not currently connected to the BFT cloud.
+
+    Raised when the dispatcher reports "Socket not found", meaning the
+    physical gate controller has no active socket to the cloud (it is
+    powered down or has lost its internet connection). This is a normal,
+    real-world condition -- not a client bug -- so it is handled like a
+    transient failure (carry forward last-known state, back off) rather
+    than being retried aggressively.
+    """
+
+
 class BftDeviceNotFoundError(BftApiError):
     """Device not found in BFT cloud account."""
 
@@ -294,6 +306,21 @@ class BftApiClient:
                             f"Authentication failed for {command} "
                             f"after re-authentication (HTTP {resp.status})"
                         )
+
+                    if resp.status == 400:
+                        # The dispatcher returns HTTP 400 with
+                        # {"error": "Socket not found"} when the gate
+                        # controller has no active socket to the cloud
+                        # (device offline). Retrying immediately won't
+                        # help, so surface it as a distinct, non-retryable
+                        # "device offline" condition and let the caller
+                        # (coordinator) apply poll-level backoff instead.
+                        body_text = await resp.text()
+                        if "socket not found" in body_text.lower():
+                            raise BftDeviceOfflineError(
+                                f"Device not connected to BFT cloud "
+                                f"(Socket not found) on {command}"
+                            )
 
                     if resp.status >= 500 and is_diagnosis:
                         if attempt < self._retry_count - 1:
