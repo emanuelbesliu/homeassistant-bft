@@ -5,6 +5,14 @@ All notable changes to the BFT Home Assistant Integration will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.4](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.3...v2.1.4) (2026-07-01)
+
+
+### Bug Fixes
+
+* handle offline gate (Socket not found) without log spam ([69294a9](https://github.com/emanuelbesliu/homeassistant-bft/commit/69294a9082f771aab7dac545e4784c4e3deb4275))
+* handle offline gate (Socket not found) without log spam ([dd9df26](https://github.com/emanuelbesliu/homeassistant-bft/commit/dd9df26a8f371452fd6dcbde55f1791a92935f01))
+
 ## [2.1.3](https://github.com/emanuelbesliu/homeassistant-bft/compare/v2.1.2...v2.1.3) (2026-05-14)
 
 
